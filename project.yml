@@ -12,7 +12,7 @@ settings:
     MACOSX_DEPLOYMENT_TARGET: "14.0"
     GENERATE_INFOPLIST_FILE: NO
     DEAD_CODE_STRIPPING: YES
-    ENABLE_HARDENED_RUNTIME: YES
+    ENABLE_HARDENED_RUNTIME: NO
     CODE_SIGN_STYLE: Automatic
 
 packages:
@@ -35,33 +35,8 @@ targets:
       path: PortlyApp/PortlyApp.entitlements
       properties:
         com.apple.security.app-sandbox: false
-        com.apple.security.application-groups:
-          - group.com.cabestian.portly
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.cabestian.portly
-    dependencies:
-      - package: PortScanCore
-      - target: PortlyWidget
-
-  PortlyWidget:
-    type: app-extension
-    platform: macOS
-    sources:
-      - PortlyWidget
-    info:
-      path: PortlyWidget/Info.plist
-      properties:
-        NSExtension:
-          NSExtensionPointIdentifier: com.apple.widgetkit-extension
-    entitlements:
-      path: PortlyWidget/PortlyWidget.entitlements
-      properties:
-        com.apple.security.app-sandbox: true
-        com.apple.security.application-groups:
-          - group.com.cabestian.portly
-    settings:
-      base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.cabestian.portly.widget
     dependencies:
       - package: PortScanCore
