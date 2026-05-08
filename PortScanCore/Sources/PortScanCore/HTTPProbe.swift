@@ -11,6 +11,11 @@ public enum HTTPProbe {
         }
     }
 
+    /// Maximum number of bytes we read from the response body before bailing.
+    /// A hostile local server could ignore our `Range` header and stream a
+    /// gigabyte over loopback in 300 ms; capping the read protects memory.
+    private static let maxBodyBytes = 16 * 1024
+
     /// Issues GET / on http://127.0.0.1:port. Returns isHTTP=true if any HTTP
     /// response is received. Extracts <title> from the body if present.
     public static func probe(port: UInt16, timeoutMs: Int = 300) async throws -> Result {
@@ -28,11 +33,17 @@ public enum HTTPProbe {
         let session = URLSession(configuration: config)
 
         do {
-            let (data, response) = try await session.data(for: request)
+            let (asyncBytes, response) = try await session.bytes(for: request)
             guard response is HTTPURLResponse else {
                 return Result(isHTTP: false, title: nil)
             }
-            let body = String(data: data, encoding: .utf8) ?? ""
+            var buffer = Data()
+            buffer.reserveCapacity(maxBodyBytes)
+            for try await byte in asyncBytes {
+                buffer.append(byte)
+                if buffer.count >= maxBodyBytes { break }
+            }
+            let body = String(data: buffer, encoding: .utf8) ?? ""
             return Result(isHTTP: true, title: Self.extractTitle(body))
         } catch {
             return Result(isHTTP: false, title: nil)
