@@ -40,3 +40,4 @@ Portly.xcodeproj/
 
 # Build artifacts
 build/
+release/

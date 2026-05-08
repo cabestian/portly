@@ -49,7 +49,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 <plist version="1.0"><dict>
   <key>CFBundleDevelopmentRegion</key><string>en</string>
   <key>CFBundleExecutable</key><string>Portly</string>
-  <key>CFBundleIdentifier</key><string>com.cabestian.portly</string>
+  <key>CFBundleIdentifier</key><string>app.portly</string>
   <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
   <key>CFBundleName</key><string>Portly</string>
   <key>CFBundlePackageType</key><string>APPL</string>

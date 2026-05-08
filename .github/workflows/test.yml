@@ -1,0 +1,38 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: swift test (PortScanCore)
+    runs-on: macos-14
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: |
+          swift --version
+          xcrun --show-sdk-path --sdk macosx
+
+      - name: Run tests
+        working-directory: PortScanCore
+        run: swift test --parallel
+
+  build:
+    name: build .app bundle
+    runs-on: macos-14
+    timeout-minutes: 10
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: ./scripts/build.sh
+      - name: Verify bundle
+        run: |
+          test -x build/Portly.app/Contents/MacOS/Portly
+          test -f build/Portly.app/Contents/Info.plist
+          codesign -dvv build/Portly.app

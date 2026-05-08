@@ -2,7 +2,6 @@
 
 **Date:** 2026-05-07
 **Status:** Validated (brainstorm), pending implementation plan
-**Author:** Maxime Lhuillier
 
 ---
 
@@ -29,7 +28,7 @@ A single Xcode project with three targets:
 | `PortlyWidget` | Widget Extension (WidgetKit) | Small + medium widget. Reads cached snapshot. Rows are App Intents. |
 
 `PortlyApp` and `PortlyWidget` share state through an **App Group**
-(`group.com.cabestian.portly`). The app writes a JSON snapshot
+(`group.app.portly`). The app writes a JSON snapshot
 (`snapshot.json`) into the group container after each scan; the widget reads
 it via its `TimelineProvider`. The widget never scans on its own (widget
 runtime budget is tight, and we want a single source of truth).
@@ -48,8 +47,8 @@ runtime budget is tight, and we want a single source of truth).
 ```
 
 Bundle identifiers:
-- App: `com.cabestian.portly`
-- Widget: `com.cabestian.portly.widget`
+- App: `app.portly`
+- Widget: `app.portly.widget`
 
 ## 3. Scan and resolution
 
@@ -99,7 +98,7 @@ Resolved per listener, in priority order. First non-empty value wins.
    (`<title>([^<]+)</title>`, case-insensitive). Trim and decode HTML entities.
 2. **Process working directory basename** — `lsof -p <pid> -d cwd -F n`,
    take the last path component. Example:
-   `/Users/.../openchantier/dashboard` → `dashboard`.
+   `/Users/.../next-app/dashboard` → `dashboard`.
 3. **Command name** — from the original lsof output (`node`, `cargo`,
    `postgres`).
 
@@ -152,7 +151,7 @@ containing a SwiftUI list:
 ```
 ┌──────────────────────────────────┐
 │ Next.js Dashboard         :4280  │  ← clickable
-│   node · ~/openchantier/dashboard│     (subtitle, grey)
+│   node · ~/next-app/dashboard│     (subtitle, grey)
 ├──────────────────────────────────┤
 │ Cockpit                   :3000  │
 │   cargo · ~/cockpit              │
@@ -233,7 +232,7 @@ Target ≥ 80 % line coverage on `PortScanCore`.
   via App Intents.
 - **Sandbox:** disabled (`com.apple.security.app-sandbox = false`). Required
   to spawn `lsof`. Hardened runtime stays on.
-- **App Group:** `group.com.cabestian.portly` enabled on both targets.
+- **App Group:** `group.app.portly` enabled on both targets.
 - **Signing:** ad-hoc for personal use during dev. Developer ID + notarisation
   added later if/when distributed publicly.
 - **Launch at login:** `SMAppService.mainApp.register()` (modern API,

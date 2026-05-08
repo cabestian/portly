@@ -1,54 +1,85 @@
 # Portly
 
-A tiny macOS menu-bar app that lists active local HTTP servers and lets
-you open them in your browser with a single click.
+> **Stop hunting for the right localhost.** A tiny menu-bar app that shows
+> every local HTTP server you have running and opens it in your browser
+> with one click.
+
+[![Swift](https://img.shields.io/badge/Swift-5.9-F05138?logo=swift&logoColor=white)](https://swift.org)
+[![Platform](https://img.shields.io/badge/platform-macOS%2014%2B-lightgrey?logo=apple)](https://www.apple.com/macos/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![CI](https://github.com/maximelhuillier/portly/actions/workflows/test.yml/badge.svg)](../../actions/workflows/test.yml)
+
+<p align="center">
+  <img src="docs/img/popover.svg" width="540" alt="Portly popover showing local HTTP servers">
+</p>
 
 ## Why
 
-When you're juggling several dev servers (`next dev`, `cargo run`, vault
-routers, side projects), figuring out which port is which becomes a chore.
-Portly scans local TCP listeners, probes them for HTTP, and surfaces a
-clickable list:
+When `next dev`, `cargo run`, a Storybook, an API gateway, a static site
+preview and a Vite playground are all running at once, *which port was
+which?* You alt-tab to your terminal, you grep `lsof`, you copy-paste a
+URL. Portly sits in the menu bar and tells you. Click → browser. That's
+it.
 
-```
-Next.js Dashboard      :4280
-Cockpit                :3000
-Vault Router           :7777
-postgres               :5432    (informational only, not clickable)
-```
+## Highlights
 
-## Build
+- **Smart detection.** It doesn't just list ports — it probes them and
+  fetches `<title>` so you see *"Next.js Dashboard"*, not *"node"*.
+- **Click-to-open.** Any HTTP server is one click away in your default
+  browser.
+- **Show non-HTTP services.** Postgres, Redis, gRPC servers — toggle
+  them on for full visibility, off when you just want web stuff.
+- **Lightweight.** A single 200 KB binary, no Electron, no daemon, no
+  dependencies, no telemetry.
+- **No Xcode required.** Builds with Command Line Tools alone via a
+  plain `./scripts/build.sh`.
 
-Requirements: macOS 14 (Sonoma) or later, Xcode Command Line Tools (no
-full Xcode install needed), Homebrew.
+## Install
+
+Requirements: **macOS 14 (Sonoma) or later**.
 
 ```bash
 git clone https://github.com/maximelhuillier/portly.git
 cd portly
 ./scripts/build.sh
-open build/Portly.app
+cp -R build/Portly.app /Applications/
+open /Applications/Portly.app
 ```
 
-The build script compiles the app with `swiftc` and ad-hoc signs it. The
-icon appears in the menu bar (no Dock icon — `LSUIElement` is on).
+A network icon appears in your menu bar. Click it.
 
-To install permanently, copy `build/Portly.app` to `/Applications/`.
+> First launch: macOS Gatekeeper blocks ad-hoc-signed apps. Right-click
+> `Portly.app` → **Open** → **Open** to whitelist it.
 
 ## How it works
 
-- `lsof -nP -iTCP -sTCP:LISTEN` lists local TCP listeners.
-- Each port is GET-probed at `http://127.0.0.1:<port>/` (300 ms timeout).
-  Any HTTP response makes the entry clickable.
-- For HTTP entries, the `<title>` is fetched (first 2 KB) and used as
-  the display name. Otherwise we fall back to the working-directory
-  basename or the process command name.
-- Snapshots are written to `~/Library/Application Support/Portly/`.
+```
+┌──────────────────┐    ┌─────────────────┐    ┌──────────────────┐
+│  lsof -iTCP -F   │ →  │   HTTP probe    │ →  │  Title + cwd     │
+│  every 3–15 s    │    │   GET /:port    │    │  resolution      │
+└──────────────────┘    └─────────────────┘    └──────────────────┘
+                                                         │
+                                                         ▼
+                                              clickable port list
+```
+
+1. **Listen for listeners.** `lsof -nP -iTCP -sTCP:LISTEN` enumerates
+   every TCP server on `127.0.0.1`, `::1`, or `*`.
+2. **Probe.** Each port gets a 300 ms HTTP GET. Anything that talks
+   HTTP becomes clickable; the rest gets a "Services" section.
+3. **Resolve names.** For HTTP ports, the `<title>` of the homepage
+   (first 2 KB) wins. Fallback: working-directory basename. Fallback:
+   process name.
+
+The menu re-scans every 3 s while open, every 15 s in the background.
 
 ## Architecture
 
-- `PortScanCore/` — Swift Package, pure logic, fully unit-tested with
-  [Swift Testing](https://github.com/apple/swift-testing).
-- `PortlyApp/` — AppKit menu-bar host running the scan loop.
+| Module | Role |
+|---|---|
+| **`PortScanCore/`** | Pure logic: lsof parser, HTTP probe, name resolver, snapshot. Zero AppKit. Fully unit-tested. |
+| **`PortlyApp/`** | AppKit menu-bar host. `NSStatusItem`, SwiftUI popover, `SMAppService` for launch-at-login. |
+| **`scripts/build.sh`** | Builds an ad-hoc-signed `.app` using `swiftc` + `codesign`. No Xcode dependency. |
 
 ## Testing
 
@@ -56,22 +87,36 @@ To install permanently, copy `build/Portly.app` to `/Applications/`.
 cd PortScanCore && swift test
 ```
 
-The core tests run under Command Line Tools alone — no full Xcode needed.
+12 tests covering the lsof parser (fixture-driven), the HTTP probe
+(against an embedded `NWListener`), name resolution, and snapshot
+encoding.
 
 ## Limitations
 
-- Sandbox is **off** so the app can run `lsof`. Mac App Store distribution
-  is not possible.
-- Only TCP listeners on `127.0.0.1`, `::1`, or `*` are surfaced.
-- HTTP only — Postgres / Redis / etc. show up as informational rows but
-  are not clickable.
-- **No desktop widget.** A WidgetKit medium widget was implemented and
-  works in code, but macOS `chronod` only registers widgets signed with
-  an Apple Developer ID (notarised). Ad-hoc signed extensions are
-  silently ignored, so widgets are off the table without a paid
-  Developer account. The widget code lives in git history (commit
-  `ae36a75`) and can be revived if a Developer ID is available.
+- **Sandbox is off.** Required to spawn `lsof`. Mac App Store
+  distribution is not on the table.
+- **HTTP only.** Postgres / Redis / Mongo show up as informational
+  rows but aren't clickable (there's no obvious "browser" for them).
+- **No desktop widget.** A WidgetKit version was implemented and works
+  in code, but macOS `chronod` only registers widgets signed with an
+  Apple Developer ID. That requires a paid account, so the desktop /
+  Notification Center widget is off the table for ad-hoc builds. The
+  widget code is preserved in git history for anyone with a Developer
+  ID who wants to revive it.
+
+## Contributing
+
+PRs welcome — especially for:
+
+- App icon (currently uses `network` SF Symbol)
+- Browser preference (Chrome / Safari / Firefox)
+- Option-click to copy URL instead of opening
+- Custom port names (manual override of title / cwd resolution)
+- Linux port (the `PortScanCore` package is portable, only the AppKit
+  layer is Mac-specific)
+
+Run `swift test` before opening a PR.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+[MIT](LICENSE) — do whatever you want.
