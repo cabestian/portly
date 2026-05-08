@@ -1,0 +1,12 @@
+p1234
+cnode
+PTCP
+n127.0.0.1:3000
+p5678
+ccargo
+PTCP
+n*:4280
+p9012
+cpostgres
+PTCP
+n127.0.0.1:5432
