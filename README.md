@@ -7,7 +7,7 @@
 [![Swift](https://img.shields.io/badge/Swift-5.9-F05138?logo=swift&logoColor=white)](https://swift.org)
 [![Platform](https://img.shields.io/badge/platform-macOS%2014%2B-lightgrey?logo=apple)](https://www.apple.com/macos/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![CI](https://github.com/maximelhuillier/portly/actions/workflows/test.yml/badge.svg)](../../actions/workflows/test.yml)
+[![CI](https://github.com/cabestian/portly/actions/workflows/test.yml/badge.svg)](../../actions/workflows/test.yml)
 
 <p align="center">
   <img src="docs/img/popover.svg" width="540" alt="Portly popover showing local HTTP servers">
@@ -39,7 +39,7 @@ it.
 Requirements: **macOS 14 (Sonoma) or later**.
 
 ```bash
-git clone https://github.com/maximelhuillier/portly.git
+git clone https://github.com/cabestian/portly.git
 cd portly
 ./scripts/build.sh
 cp -R build/Portly.app /Applications/
