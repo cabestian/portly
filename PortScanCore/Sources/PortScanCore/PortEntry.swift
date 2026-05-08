@@ -13,13 +13,7 @@ public struct PortEntry: Codable, Equatable, Identifiable, Sendable {
     public var id: UInt16 { port }
 
     public var displayName: String {
-        if let t = title?.trimmingCharacters(in: .whitespacesAndNewlines), !t.isEmpty {
-            return t
-        }
-        if let c = cwd, !c.isEmpty {
-            return (c as NSString).lastPathComponent
-        }
-        return command
+        NameResolver.resolve(title: title, cwd: cwd, command: command)
     }
 
     public init(port: UInt16, pid: Int32, command: String, cwd: String?, title: String?, isHTTP: Bool) {
