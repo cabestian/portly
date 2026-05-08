@@ -1,18 +1,11 @@
 import Foundation
 
-public enum AppGroupStore {
-    public static let groupID = "group.com.cabestian.portly"
+/// Persists the most recent scan to disk. Lives at
+/// `~/Library/Application Support/Portly/snapshot.json`.
+public enum SnapshotStore {
     public static let snapshotFilename = "snapshot.json"
 
-    /// Returns the App Group container if available (signed builds with the right
-    /// entitlement), otherwise falls back to ~/Library/Application Support/Portly/.
-    /// The fallback means the menu-bar app works in ad-hoc dev builds; the widget
-    /// still needs a proper signed build to share state.
     public static var snapshotURL: URL? {
-        if let group = FileManager.default
-            .containerURL(forSecurityApplicationGroupIdentifier: groupID) {
-            return group.appendingPathComponent(snapshotFilename)
-        }
         guard let appSupport = try? FileManager.default.url(
             for: .applicationSupportDirectory, in: .userDomainMask,
             appropriateFor: nil, create: true
@@ -22,10 +15,9 @@ public enum AppGroupStore {
         return dir.appendingPathComponent(snapshotFilename)
     }
 
-    /// Writes atomically — truncating an in-flight read is not acceptable.
     public static func write(_ snapshot: Snapshot) throws {
         guard let url = snapshotURL else {
-            throw NSError(domain: "AppGroupStore", code: 1,
+            throw NSError(domain: "SnapshotStore", code: 1,
                           userInfo: [NSLocalizedDescriptionKey: "No writable snapshot location"])
         }
         let data = try JSONEncoder().encode(snapshot)
