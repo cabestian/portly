@@ -1,6 +1,6 @@
 name: Portly
 options:
-  bundleIdPrefix: com.cabestian
+  bundleIdPrefix: app
   deploymentTarget:
     macOS: "14.0"
   developmentLanguage: en
@@ -37,6 +37,6 @@ targets:
         com.apple.security.app-sandbox: false
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.cabestian.portly
+        PRODUCT_BUNDLE_IDENTIFIER: app.portly
     dependencies:
       - package: PortScanCore

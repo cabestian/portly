@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 520" font-family="-apple-system, 'SF Pro Display', system-ui, sans-serif">
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="14" flood-color="#000" flood-opacity="0.18"/>
+    </filter>
+    <linearGradient id="bg" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#fdfdfd"/>
+      <stop offset="1" stop-color="#f4f4f6"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="720" height="520" fill="#e9eaee"/>
+
+  <!-- menu bar strip -->
+  <rect x="0" y="0" width="720" height="28" fill="#1c1c1e" opacity="0.92"/>
+  <text x="20" y="19" fill="#fff" font-size="13"></text>
+  <text x="46" y="19" fill="#fff" font-size="13" font-weight="600">Portly</text>
+  <text x="592" y="19" fill="#fff" font-size="13"></text>
+  <text x="612" y="19" fill="#fff" font-size="13"></text>
+  <text x="632" y="19" fill="#fff" font-size="13"></text>
+  <circle cx="676" cy="14" r="4" fill="#34c759"/>
+  <text x="690" y="19" fill="#fff" font-size="13">14:45</text>
+
+  <!-- pointer arrow -->
+  <polygon points="668,38 678,28 688,38" fill="url(#bg)" filter="url(#shadow)"/>
+
+  <!-- popover card -->
+  <g filter="url(#shadow)">
+    <rect x="340" y="38" width="360" height="450" rx="14" fill="url(#bg)" stroke="#d8d8de" stroke-width="0.5"/>
+
+    <!-- header -->
+    <text x="358" y="68" font-size="11" font-weight="600" fill="#86868b" letter-spacing="0.6">LOCAL HTTP SERVERS</text>
+    <text x="676" y="68" text-anchor="end" font-size="11" fill="#86868b">9 active</text>
+
+    <!-- row 1 -->
+    <rect x="350" y="80" width="340" height="44" rx="8" fill="#0071e3" opacity="0.06"/>
+    <text x="362" y="100" font-size="13" font-weight="600" fill="#1c1c1e">Next.js Dashboard</text>
+    <text x="362" y="116" font-size="11" fill="#86868b">node · ~/work/dashboard</text>
+    <text x="678" y="106" text-anchor="end" font-size="13" font-family="ui-monospace, Menlo, monospace" fill="#1c1c1e">:4280</text>
+
+    <!-- row 2 -->
+    <text x="362" y="148" font-size="13" font-weight="600" fill="#1c1c1e">Cockpit</text>
+    <text x="362" y="164" font-size="11" fill="#86868b">cargo · ~/projects/cockpit</text>
+    <text x="678" y="154" text-anchor="end" font-size="13" font-family="ui-monospace, Menlo, monospace" fill="#1c1c1e">:3000</text>
+    <line x1="350" y1="180" x2="690" y2="180" stroke="#e5e5ea"/>
+
+    <!-- row 3 -->
+    <text x="362" y="200" font-size="13" font-weight="600" fill="#1c1c1e">Vault Router</text>
+    <text x="362" y="216" font-size="11" fill="#86868b">vault-router · ~/tools</text>
+    <text x="678" y="206" text-anchor="end" font-size="13" font-family="ui-monospace, Menlo, monospace" fill="#1c1c1e">:7777</text>
+    <line x1="350" y1="232" x2="690" y2="232" stroke="#e5e5ea"/>
+
+    <!-- row 4 -->
+    <text x="362" y="252" font-size="13" font-weight="600" fill="#1c1c1e">Storybook</text>
+    <text x="362" y="268" font-size="11" fill="#86868b">node · ~/design-system</text>
+    <text x="678" y="258" text-anchor="end" font-size="13" font-family="ui-monospace, Menlo, monospace" fill="#1c1c1e">:6006</text>
+    <line x1="350" y1="284" x2="690" y2="284" stroke="#e5e5ea"/>
+
+    <!-- row 5 -->
+    <text x="362" y="304" font-size="13" font-weight="600" fill="#1c1c1e">API Gateway</text>
+    <text x="362" y="320" font-size="11" fill="#86868b">go · ~/services/gateway</text>
+    <text x="678" y="310" text-anchor="end" font-size="13" font-family="ui-monospace, Menlo, monospace" fill="#1c1c1e">:8080</text>
+    <line x1="350" y1="336" x2="690" y2="336" stroke="#e5e5ea"/>
+
+    <!-- services section -->
+    <text x="358" y="358" font-size="10" font-weight="600" fill="#86868b" letter-spacing="0.6">SERVICES</text>
+
+    <text x="362" y="380" font-size="13" fill="#86868b">postgres</text>
+    <text x="678" y="380" text-anchor="end" font-size="13" font-family="ui-monospace, Menlo, monospace" fill="#86868b">:5432</text>
+
+    <text x="362" y="406" font-size="13" fill="#86868b">redis-server</text>
+    <text x="678" y="406" text-anchor="end" font-size="13" font-family="ui-monospace, Menlo, monospace" fill="#86868b">:6379</text>
+
+    <line x1="350" y1="426" x2="690" y2="426" stroke="#e5e5ea"/>
+
+    <!-- footer -->
+    <rect x="358" y="442" width="14" height="14" rx="3" fill="#fff" stroke="#c7c7cc"/>
+    <text x="380" y="453" font-size="11" fill="#1c1c1e">Show all</text>
+    <rect x="446" y="442" width="14" height="14" rx="3" fill="#0071e3"/>
+    <polyline points="449,449 452,452 458,446" fill="none" stroke="#fff" stroke-width="2"/>
+    <text x="468" y="453" font-size="11" fill="#1c1c1e">Launch at login</text>
+    <text x="678" y="453" text-anchor="end" font-size="11" fill="#0071e3">Refresh</text>
+  </g>
+</svg>
