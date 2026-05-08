@@ -8,10 +8,13 @@ on:
 jobs:
   test:
     name: swift test (PortScanCore)
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+
+      - name: Select Xcode 16
+        run: sudo xcode-select -switch /Applications/Xcode_16.app
 
       - name: Show toolchain
         run: |
@@ -24,11 +27,13 @@ jobs:
 
   build:
     name: build .app bundle
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 10
     needs: test
     steps:
       - uses: actions/checkout@v4
+      - name: Select Xcode 16
+        run: sudo xcode-select -switch /Applications/Xcode_16.app
       - name: Build
         run: ./scripts/build.sh
       - name: Verify bundle
