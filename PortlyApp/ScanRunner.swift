@@ -36,6 +36,6 @@ final class ScanRunner: ObservableObject {
         let entries = await scanner.scan()
         let snap = Snapshot(scannedAt: Date(), entries: entries)
         self.snapshot = snap
-        try? AppGroupStore.write(snap)
+        try? SnapshotStore.write(snap)
     }
 }
