@@ -1,7 +1,7 @@
 import AppKit
 import SwiftUI
 
-final class StatusBarController {
+final class StatusBarController: NSObject {
     private let statusItem: NSStatusItem
     private let popover = NSPopover()
     private let scanRunner: ScanRunner
@@ -9,6 +9,7 @@ final class StatusBarController {
     init(scanRunner: ScanRunner) {
         self.scanRunner = scanRunner
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        super.init()
         if let button = statusItem.button {
             button.image = NSImage(systemSymbolName: "network", accessibilityDescription: "Portly")
             button.target = self
