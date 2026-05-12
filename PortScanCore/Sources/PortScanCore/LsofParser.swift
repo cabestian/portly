@@ -42,19 +42,21 @@ public enum LsofParser {
 
     private static func parseAddress(_ s: String) -> (address: String, port: UInt16)? {
         // Forms: "127.0.0.1:3000", "*:4280", "[::1]:8080"
+        // Port 0 est rejeté : c'est une valeur sentinel "any port" jamais
+        // ouverte en pratique, et la probe sur :0 cause un connectx EINVAL.
         if s.hasPrefix("[") {
             guard let closeBracket = s.firstIndex(of: "]") else { return nil }
             let addr = String(s[s.index(after: s.startIndex)..<closeBracket])
             let afterBracket = s.index(after: closeBracket)
             guard afterBracket < s.endIndex, s[afterBracket] == ":" else { return nil }
             let portString = String(s[s.index(after: afterBracket)...])
-            guard let port = UInt16(portString) else { return nil }
+            guard let port = UInt16(portString), port > 0 else { return nil }
             return (addr, port)
         }
         guard let colon = s.lastIndex(of: ":") else { return nil }
         let addr = String(s[..<colon])
         let portString = String(s[s.index(after: colon)...])
-        guard let port = UInt16(portString) else { return nil }
+        guard let port = UInt16(portString), port > 0 else { return nil }
         return (addr, port)
     }
 

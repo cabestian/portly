@@ -35,7 +35,13 @@ final class ScanRunner: ObservableObject {
     private func rescan() async {
         let entries = await scanner.scan()
         let snap = Snapshot(scannedAt: Date(), entries: entries)
-        self.snapshot = snap
+        // Ne ré-affecte la prop @Published que si les entries ont changé.
+        // Sans ce diff, SwiftUI re-render PortListView à chaque scan et
+        // AppKit signale une récursion de layout sur NSStatusItemView
+        // (WarnOnce "layoutSubtreeIfNeeded on a view already being laid out").
+        if entries != self.snapshot.entries {
+            self.snapshot = snap
+        }
         try? SnapshotStore.write(snap)
     }
 }
