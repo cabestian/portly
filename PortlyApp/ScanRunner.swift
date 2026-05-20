@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import PortScanCore
 
@@ -8,10 +9,12 @@ final class ScanRunner: ObservableObject {
     private let scanner = PortScanner()
     private var timer: Timer?
     private var fastMode = false
+    private var wakeObserver: NSObjectProtocol?
 
     func start() {
         Task { await rescan() }
         scheduleTimer()
+        observeWake()
     }
 
     func setFastMode(_ on: Bool) {
@@ -24,12 +27,32 @@ final class ScanRunner: ObservableObject {
         Task { await rescan() }
     }
 
+    private func observeWake() {
+        guard wakeObserver == nil else { return }
+        wakeObserver = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didWakeNotification,
+            object: nil,
+            queue: nil
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                self.scheduleTimer()
+                await self.rescan()
+            }
+        }
+    }
+
     private func scheduleTimer() {
         timer?.invalidate()
         let interval: TimeInterval = fastMode ? 3 : 15
-        timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
+        // Timer ajouté en mode .common pour qu'il continue à fire pendant
+        // le tracking du popover. Sans ça, ouvrir le volet gèle les scans
+        // jusqu'à la fermeture (RunLoop passe en mode eventTracking).
+        let newTimer = Timer(timeInterval: interval, repeats: true) { [weak self] _ in
             Task { await self?.rescan() }
         }
+        RunLoop.main.add(newTimer, forMode: .common)
+        timer = newTimer
     }
 
     private func rescan() async {
