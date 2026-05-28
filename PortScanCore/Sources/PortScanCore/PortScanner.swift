@@ -32,14 +32,14 @@ public actor PortScanner {
     }
 
     private static func runLsofListeners() async -> String {
-        await runProcess(
+        await ProcessRunner.run(
             executable: "/usr/sbin/lsof",
             args: ["-nP", "-iTCP", "-sTCP:LISTEN", "-F", "pcnPL"]
         )
     }
 
     private static func cwd(for pid: Int32) async -> String? {
-        let raw = await runProcess(
+        let raw = await ProcessRunner.run(
             executable: "/usr/sbin/lsof",
             args: ["-a", "-p", String(pid), "-d", "cwd", "-F", "n"]
         )
@@ -47,27 +47,5 @@ public actor PortScanner {
             return String(line.dropFirst())
         }
         return nil
-    }
-
-    private static func runProcess(executable: String, args: [String]) async -> String {
-        await withCheckedContinuation { (continuation: CheckedContinuation<String, Never>) in
-            let process = Process()
-            process.executableURL = URL(fileURLWithPath: executable)
-            process.arguments = args
-            let pipe = Pipe()
-            process.standardOutput = pipe
-            process.standardError = Pipe()
-            do {
-                try process.run()
-            } catch {
-                continuation.resume(returning: "")
-                return
-            }
-            DispatchQueue.global().async {
-                process.waitUntilExit()
-                let data = pipe.fileHandleForReading.readDataToEndOfFile()
-                continuation.resume(returning: String(data: data, encoding: .utf8) ?? "")
-            }
-        }
     }
 }
