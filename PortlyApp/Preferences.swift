@@ -9,6 +9,7 @@ enum PortlyStyle: String, CaseIterable, Identifiable {
     case soft
     case mono
     case tsshell
+    case glass
 
     var id: String { rawValue }
 
@@ -18,6 +19,7 @@ enum PortlyStyle: String, CaseIterable, Identifiable {
         case .soft: return "Soft"
         case .mono: return "Mono cards"
         case .tsshell: return "TypeScript shell (experimental)"
+        case .glass: return "Glass (Liquid)"
         }
     }
 }

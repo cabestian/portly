@@ -16,6 +16,19 @@ public enum HTTPProbe {
     /// gigabyte over loopback in 300 ms; capping the read protects memory.
     private static let maxBodyBytes = 16 * 1024
 
+    /// Session unique réutilisée par toutes les probes. Avant, une URLSession
+    /// éphémère était créée *par port et par scan* sans jamais être invalidée
+    /// (une session se retient elle-même → fuite de connexions/queues qui
+    /// dégrade la fiabilité sur la durée). Le timeout reste piloté par requête
+    /// via `request.timeoutInterval`. `waitsForConnectivity = false` fait
+    /// échouer vite plutôt que d'attendre, utile au réveil système.
+    private static let session: URLSession = {
+        let config = URLSessionConfiguration.ephemeral
+        config.waitsForConnectivity = false
+        config.requestCachePolicy = .reloadIgnoringLocalCacheData
+        return URLSession(configuration: config)
+    }()
+
     /// Issues GET / on http://127.0.0.1:port. Returns isHTTP=true if any HTTP
     /// response is received. Extracts <title> from the body if present.
     public static func probe(port: UInt16, timeoutMs: Int = 300) async throws -> Result {
@@ -26,11 +39,6 @@ public enum HTTPProbe {
         request.httpMethod = "GET"
         request.setValue("bytes=0-2048", forHTTPHeaderField: "Range")
         request.timeoutInterval = TimeInterval(timeoutMs) / 1000.0
-
-        let config = URLSessionConfiguration.ephemeral
-        config.timeoutIntervalForRequest = TimeInterval(timeoutMs) / 1000.0
-        config.timeoutIntervalForResource = TimeInterval(timeoutMs) / 1000.0
-        let session = URLSession(configuration: config)
 
         do {
             let (asyncBytes, response) = try await session.bytes(for: request)

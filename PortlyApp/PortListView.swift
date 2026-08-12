@@ -84,6 +84,14 @@ struct PortListView: View {
                     density: density,
                     openURL: openURL
                 )
+            case .glass:
+                GlassContent(
+                    runner: runner,
+                    showAll: $showAll,
+                    visibleEntries: visibleEntries,
+                    density: density,
+                    openURL: openURL
+                )
             }
         }
         .frame(width: density == .compact ? 300 : 360)
@@ -797,6 +805,189 @@ private struct TSEntryLine: View {
         .background(hovered && entry.isHTTP ? Color(red: 122/255, green: 162/255, blue: 247/255).opacity(0.07) : .clear)
         .onHover { hovered = $0 }
         .animation(.easeInOut(duration: 0.12), value: hovered)
+    }
+}
+
+// MARK: - 7 · Glass (Liquid Glass, macOS 26 Tahoe)
+//
+// One continuous glass surface (the native Tahoe popover) with flat rows on
+// top. The hovered row gets a single Liquid Glass capsule that MORPHS from row
+// to row — the signature interaction — via a shared glassEffectID inside one
+// GlassEffectContainer. No per-row glass: stacking many glass pills reads as
+// frosted cards, not liquid glass.
+
+private struct GlassContent: View {
+    @ObservedObject var runner: ScanRunner
+    @Binding var showAll: Bool
+    let visibleEntries: [PortEntry]
+    let density: Density
+    let openURL: (PortEntry) -> Void
+
+    private var compact: Bool { density == .compact }
+
+    @State private var hoveredID: PortEntry.ID?
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Text("\(visibleEntries.count) services")
+                    .foregroundStyle(.secondary)
+                Spacer()
+                LiveIndicator(color: .accentColor)
+            }
+            .font(.system(size: compact ? 10 : 11))
+            .padding(.horizontal, compact ? 12 : 16)
+            .padding(.top, compact ? 8 : 11)
+            .padding(.bottom, compact ? 5 : 7)
+
+            if visibleEntries.isEmpty {
+                Text("No local servers detected")
+                    .foregroundStyle(.secondary)
+                    .padding()
+            } else {
+                ScrollView {
+                    glassList
+                        .padding(.horizontal, compact ? 6 : 8)
+                        .padding(.bottom, compact ? 6 : 9)
+                }
+                .frame(maxHeight: 360)
+            }
+
+            Divider().opacity(0.4)
+
+            HStack(spacing: compact ? 8 : 12) {
+                Button { runner.forceRefresh() } label: {
+                    HStack(spacing: 4) {
+                        Text("⌘R").font(.system(size: compact ? 9.5 : 10.5, design: .monospaced))
+                            .padding(.horizontal, 5).padding(.vertical, 1)
+                            .background(.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 4))
+                        Text("Refresh")
+                    }
+                }
+                .keyboardShortcut("r", modifiers: .command)
+                .buttonStyle(.plain)
+                Spacer()
+                Toggle("Show all", isOn: $showAll)
+                    .toggleStyle(.button)
+                    .controlSize(.small)
+                Button { openPreferencesWindow() } label: {
+                    Image(systemName: "gear").foregroundStyle(Color.accentColor)
+                }
+                .buttonStyle(.plain)
+                .help("Preferences…  ⌘,")
+                Button("Quit") { NSApp.terminate(nil) }
+                    .buttonStyle(.plain)
+            }
+            .font(.system(size: compact ? 10 : 11.5))
+            .padding(.horizontal, compact ? 12 : 16)
+            .padding(.vertical, compact ? 6 : 8)
+        }
+    }
+
+    @ViewBuilder
+    private var glassList: some View {
+        VStack(spacing: 0) {
+            ForEach(visibleEntries) { entry in
+                GlassRow(entry: entry, compact: compact,
+                         hovered: hoveredID == entry.id, onOpen: openURL)
+                    .onHover { inside in
+                        if inside { hoveredID = entry.id }
+                        else if hoveredID == entry.id { hoveredID = nil }
+                    }
+            }
+        }
+        .animation(.easeOut(duration: 0.16), value: hoveredID)
+    }
+}
+
+private struct GlassRow: View {
+    let entry: PortEntry
+    let compact: Bool
+    let hovered: Bool
+    let onOpen: (PortEntry) -> Void
+
+    private var cornerRadius: CGFloat { compact ? 9 : 11 }
+
+    var body: some View {
+        HStack(spacing: compact ? 8 : 10) {
+            Button(action: { onOpen(entry) }) {
+                HStack(spacing: compact ? 9 : 12) {
+                    Circle()
+                        .fill(entry.isHTTP ? Color.green : Color.secondary.opacity(0.5))
+                        .frame(width: compact ? 6 : 7, height: compact ? 6 : 7)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(entry.displayName)
+                            .font(.system(size: compact ? 11.5 : 13, weight: .medium))
+                            .foregroundStyle(entry.isHTTP ? .primary : .secondary)
+                            .lineLimit(1)
+                        Text(subtitle)
+                            .font(.system(size: compact ? 10 : 11))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
+                    Spacer(minLength: 0)
+                    Text("\(entry.port)")
+                        .font(.system(size: compact ? 11 : 12.5, weight: .medium))
+                        .monospacedDigit()
+                        .foregroundStyle(entry.isHTTP ? .primary : .secondary)
+                    Text("→")
+                        .font(.system(size: compact ? 11 : 14))
+                        .foregroundStyle(entry.isHTTP ? Color.accentColor : .clear)
+                        .opacity(hovered ? 1 : 0.55)
+                        .frame(width: compact ? 12 : 16, alignment: .trailing)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .help(entry.isHTTP ? "Open http://localhost:\(entry.port)" : "Not an HTTP server")
+
+            if hovered {
+                Button { confirmAndKill(entry) } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .symbolRenderingMode(.hierarchical)
+                        .foregroundStyle(Color.red.opacity(0.85))
+                        .imageScale(compact ? .small : .medium)
+                }
+                .buttonStyle(.plain)
+                .help("Kill this process (SIGTERM)")
+                .transition(.opacity)
+            }
+        }
+        .padding(.horizontal, compact ? 10 : 13)
+        .padding(.vertical, compact ? 7 : 10)
+        .background(selectionHighlight)
+        .contentShape(Rectangle())
+    }
+
+    // The hovered row's glass highlight. Built from a RoundedRectangle so it
+    // inherits the row's frame (a Color.clear has no intrinsic size and the
+    // glass collapses to the container origin). macOS 26 gets real Liquid Glass
+    // with interactive refraction; older systems get a translucent material.
+    @ViewBuilder
+    private var selectionHighlight: some View {
+        if hovered {
+            if #available(macOS 26.0, *) {
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .fill(.clear)
+                    .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: cornerRadius))
+            } else {
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .fill(.ultraThinMaterial)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: cornerRadius)
+                            .strokeBorder(.white.opacity(0.18))
+                    )
+            }
+        }
+    }
+
+    private var subtitle: String {
+        if let cwd = entry.cwd {
+            let abbreviated = (cwd as NSString).abbreviatingWithTildeInPath
+            let basename = (abbreviated as NSString).lastPathComponent
+            return "\(entry.command) · \(basename)"
+        }
+        return entry.command
     }
 }
 

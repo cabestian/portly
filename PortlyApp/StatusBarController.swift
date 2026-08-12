@@ -40,6 +40,12 @@ final class StatusBarController: NSObject {
             popover.performClose(nil)
         } else {
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+            // As an accessory (LSUIElement) app, showing the popover does not
+            // activate us, so its window never becomes key and vibrancy/Liquid
+            // Glass materials render in their washed-out inactive state until a
+            // second click. Activate and key the window on the first click.
+            popover.contentViewController?.view.window?.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
         }
     }
 
